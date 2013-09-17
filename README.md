@@ -16,7 +16,7 @@ Some (slightly contrived) design
 ================================
 
 * Pre calculated table for poll results updated via signal
-* Use custom user models rather than get_profile()
+* Use custom user models rather than `get_profile()`
 * django doesn't have custom group models, so we'll have to track that
   on our own with inheritance.
 * HTML is going to be kinda crappy looking
