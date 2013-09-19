@@ -7,5 +7,5 @@ def nosettings(**overrides):
 
     from django.conf import settings, global_settings
     if not settings.configured:
-        settings.configure(default_settings=global_settings)
+        settings.configure(default_settings=global_settings, **overrides)
 

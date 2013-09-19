@@ -5,12 +5,12 @@ import pytz
 from ..dj_nosettings import nosettings
 nosettings()
 
-from poll.models import Poll
+from poll import models
 
 class TestPollDateRanges(object):
     @staticmethod
     def get_model(valid_from, valid_to):
-        return Poll(start=valid_from, end=valid_to)
+        return models.Poll(start=valid_from, end=valid_to)
 
     @classmethod
     def setupClass(cls):
@@ -22,12 +22,12 @@ class TestPollDateRanges(object):
 
     def test_valid_range(self):
         mdl = self.get_model(self.yesterday, self.tomorrow)
-        assert mdl.is_active()
+        assert mdl.is_active() is True
 
     def test_invalid_past(self):
         mdl = self.get_model(self.yeyesterday, self.yesterday)
-        assert not mdl.is_active()
+        assert mdl.is_active() is False
 
     def test_invalid_future(self):
         mdl = self.get_model(self.tomorrow, self.totomorrow)
-        assert not mdl.is_active()
+        assert mdl.is_active() is False
