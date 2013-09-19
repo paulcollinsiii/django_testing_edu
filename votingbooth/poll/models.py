@@ -3,7 +3,7 @@ import pytz
 
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.db.models.aggregates import Sum
+from django.db.models.aggregates import Sum, Count
 from django.conf import settings
 
 
@@ -16,10 +16,19 @@ class Poll(models.Model):
     question = models.CharField(max_length=255, blank=False)
     start = models.DateTimeField(blank=False, null=False)
     end = models.DateTimeField(blank=False, null=False)
+    max_num_responses = models.IntegerField(blank=True, default=0, null=False,
+    help_text='The poll will automatically close after the number of Users have voted '
+    'on this poll')
 
     def is_active(self):
         now = datetime.datetime.now(tz=pytz.UTC)
         return now > self.start and now < self.end
+
+    def num_responses(self):
+        return (Votes.objects
+                .filter(answer__poll=self)
+                .values('user')
+                .aggregate(count=Count('user')))
 
 
 class PollResultManager(models.Manager):

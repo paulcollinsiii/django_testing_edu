@@ -22,3 +22,11 @@ Some (slightly contrived) design
 * HTML is going to be kinda crappy looking
 * We don't need any ReST bits... yet.
 * Two apps, userprofile and polls.
+
+
+Late Appearing Requirements
+===========================
+
+* Polls can have a threshold after which they're closed, e.g. After X
+  number of people have voted on the Poll the poll is no longer active
+* Polls can have either a threshold, an active date range, or both
