@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    {{ poll.question }}
+    <ul>
+    {% for answer in answers %}
+        <li>{{ answer }}</li>
+    {% endfor %}
+    </ul>
+
+{% endblock content %}

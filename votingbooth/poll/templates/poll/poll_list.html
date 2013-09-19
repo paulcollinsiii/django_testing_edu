@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <ul>
+    {% for poll in poll_list %}
+        <li><a href="{% url "poll:detail" pk=poll.pk %}">Poll: {{ poll.question }}</a></li>
+    {% endfor %}
+    </ul>
+
+{% endblock content %}

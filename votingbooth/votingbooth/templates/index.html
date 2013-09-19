@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<ul>
+    <li><a href="{% url "poll:new" %}">New Poll</a></li>
+    <li><a href="{% url "poll:list" %}">List Polls</a></li>
+</ul>
+
+{% endblock content %}

@@ -11,6 +11,9 @@ class Answer(models.Model):
     text = models.CharField(max_length=255)
     poll = models.ForeignKey('poll.Poll', blank=False, null=False)
 
+    def __unicode__(self):
+        return self.text
+
 
 class Poll(models.Model):
     question = models.CharField(max_length=255, blank=False)
@@ -20,9 +23,14 @@ class Poll(models.Model):
     help_text='The poll will automatically close after the number of Users have voted '
     'on this poll')
 
+    def __unicode__(self):
+        return self.question
+
     def is_active(self):
         now = datetime.datetime.now(tz=pytz.UTC)
-        return now > self.start and now < self.end
+        valid_date = now > self.start and now < self.end if self.start and self.end else True
+        valid_repsonses = self.num_responses() < self.max_num_responses if self.max_num_responses != 0 else True
+        return valid_date and valid_repsonses
 
     def num_responses(self):
         return (Votes.objects
