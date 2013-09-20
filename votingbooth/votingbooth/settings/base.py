@@ -116,7 +116,7 @@ TEMPLATE_DIRS = (
     os.path.join(BASE_PATH, 'votingbooth', 'templates')
 )
 
-INSTALLED_APPS = (
+INSTALLED_APPS =[
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -129,7 +129,7 @@ INSTALLED_APPS = (
     # Our apps
     'poll',
     #'userprofile',
-)
+]
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 

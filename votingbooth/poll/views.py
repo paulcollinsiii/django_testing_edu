@@ -19,11 +19,13 @@ class NewPollView(FormView):
 
 new_poll = NewPollView.as_view()
 
+
 class ListPollView(ListView):
     model = models.Poll
     context_object_name = 'poll_list'
 
 list_poll = ListPollView.as_view()
+
 
 class DetailPollView(DetailView):
     model = models.Poll
@@ -33,6 +35,5 @@ class DetailPollView(DetailView):
         context = super(DetailPollView, self).get_context_data(**kwargs)
         context['answers'] = self.object.answer_set.all()
         return context
-
 
 detail_poll = DetailPollView.as_view()
