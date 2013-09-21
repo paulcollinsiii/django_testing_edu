@@ -1,10 +1,12 @@
 import datetime
 import pytz
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.aggregates import Sum, Count
-from django.conf import settings
+
+from poll import signal
 
 
 class Answer(models.Model):
@@ -51,6 +53,7 @@ class PollResultManager(models.Manager):
 
         pr, _created = self.get_or_create(poll=vote.answer.poll, answer=vote.answer)
         pr.total_votes += increment
+        pr.save()
 
     def update_for_poll(self, poll):
         """
@@ -66,12 +69,23 @@ class PollResultManager(models.Manager):
 
 
 class PollResult(models.Model):
+    objects = PollResultManager()
+
     poll = models.ForeignKey(Poll, blank=False, null=False)
     answer = models.ForeignKey(Answer, blank=False, null=False)
     total_votes = models.PositiveIntegerField(blank=False, default=0)
 
     class Meta:
         unique_together =(('poll', 'answer'))
+
+    @staticmethod
+    def handle_vote_signal(sender, instance, **kwargs):
+        if instance.pk:
+            original = Votes.objects.get(pk=instance.pk)
+            increment = instance.num - original.num
+        else:
+            increment = instance.num
+        PollResult.objects.update_for_vote(vote=instance, increment=increment)
 
 
 class Votes(models.Model):
@@ -87,7 +101,10 @@ class UserVotes(models.Model):
     user = models.OneToOneField(get_user_model())
     votes_per_poll = models.IntegerField(null=True, blank=True, default=None)
 
+
 class GroupVotes(models.Model):
     group = models.OneToOneField('auth.Group')
     votes_per_poll = models.IntegerField(null=True, blank=True, default=None)
 
+
+models.signals.pre_save.connect(PollResult.handle_vote_signal, sender=Votes)
