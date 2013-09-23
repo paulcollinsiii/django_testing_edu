@@ -1,13 +1,13 @@
 import datetime
+from django.core.exceptions import ValidationError
 import pytz
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.db.models.aggregates import Sum, Count
+from django.db.models.aggregates import Sum, Count, Min
 
-from poll import signal
-
+DEFAULT_GLOBAL_VOTES = 15
 
 class Answer(models.Model):
     text = models.CharField(max_length=255)
@@ -93,13 +93,50 @@ class Votes(models.Model):
     answer = models.ForeignKey(Answer)
     user = models.ForeignKey(settings.AUTH_USER_MODEL)
 
+    def clean(self):
+        allowed_votes = UserVotes.objects.get_allowed_votes(self.user)
+        if self.num > allowed_votes:
+            raise ValidationError('Attempted to vote more than allowed')
+        total_votes_used = (Votes.objects
+            .filter(answer__poll=self.answer.poll)
+            .exclude(pk=self.pk)
+            .aggregate(s=Sum('num')))['s'] or 0  # In case it's None
+        if (total_votes_used + self.num) > allowed_votes:
+            raise ValidationError('Attempted to vote more than allowed')
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        self.full_clean()
+        super(Votes, self).save(force_insert, force_update, using, update_fields)
+
+
+class UserVotesManager(models.Manager):
+    def get_allowed_votes(self, user):
+        """Return the max number of votes a user can put on a poll
+
+        Takes into account User --> Groups --> Global overrides
+        """
+
+        try:
+            uv = UserVotes.objects.get(user=user)
+            return uv.votes_per_poll
+        except UserVotes.DoesNotExist:
+            pass
+
+        gv = (GroupVotes.objects.filter(group__in=user.groups.all())
+              .aggregate(votes_allowed=Min('votes_per_poll')))
+        if gv['votes_allowed'] is not None:
+            return gv['votes_allowed']
+        if hasattr(settings, 'POLL_SETTINGS') and 'GLOBAL_VOTES' in settings.POLL_SETTINGS:
+            return settings.POLL_SETTINGS['GLOBAL_VOTES']
+        return DEFAULT_GLOBAL_VOTES
+
 
 class UserVotes(models.Model):
-    """Dynamically generate the 1 to 1 relation with users
-    """
+    objects = UserVotesManager()
 
     user = models.OneToOneField(get_user_model())
     votes_per_poll = models.IntegerField(null=True, blank=True, default=None)
+
 
 
 class GroupVotes(models.Model):
