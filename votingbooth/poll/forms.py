@@ -22,9 +22,9 @@ class AnswerForm(forms.Form):
         ModelForm style without all the pain of a model form
         """
 
-        vote, created = models.Votes.objects.get_or_create(answer__pk=self.cleaned_data['answer_id'],
+        vote, created = models.Votes.objects.get_or_create(answer=models.Answer.objects.get(pk=self.cleaned_data['answer_id']),
                                                            user=user,
-                                                           default={'num': self.cleaned_data['num_votes']})
+                                                           defaults={'num': self.cleaned_data['num_votes']})
 
         if not created:
             vote.num = self.cleaned_data['num_votes']

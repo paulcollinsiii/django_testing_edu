@@ -3,6 +3,7 @@ from django.core.urlresolvers import reverse
 from django_nose.tools import assert_code, assert_contains
 
 from . import factories
+from poll import models
 
 class TestPollPages(object):
     """
@@ -68,6 +69,16 @@ class TestPollVotePages(TestCase):
         self.user = factories.UserFactory()
         self.user.set_password(self.USER_PASSWORD)
         self.user.save()
+    def submit_valid_vote(self):
+        self.client.login(username=self.user.username, password=self.USER_PASSWORD)
+        answer = self.poll.answer_set.all()[0]
+        form_data = {
+            'form-TOTAL_FORMS': u'1',
+            'form-INITIAL_FORMS': u'1',
+            'form-MAX_NUM_FORMS': u'',
+            'form-0-num_votes': '1',
+            'form-0-answer_id': answer.pk}
+        return self.client.post(self.url, data=form_data)
 
     def test_vote_requires_login(self):
         assert_code(self.client.get(self.url), 302)
@@ -89,7 +100,7 @@ class TestPollVotePages(TestCase):
         self.poll.save()
         assert_code(self.client.get(self.url), 302)
 
-    def test_vote_saves_to_db(self):
+    def test_vote_redirects(self):
         """
         This is the first test we have that's fairly fragile
         Changing the implementation of the view here could break this test
@@ -98,17 +109,13 @@ class TestPollVotePages(TestCase):
         This makes it a bit harder to maintain, but that's also kind of
         the price of functional testing
         """
+        response = self.submit_valid_vote()
+        self.assertRedirects(response, reverse('poll:detail', kwargs={'pk': self.poll.pk}))
 
-        self.client.login(username=self.user.username, password=self.USER_PASSWORD)
-        answer = self.poll.answer_set.all()[0]
-        form_data = {
-            'form-TOTAL_FORMS': u'1',
-            'form-INITIAL_FORMS': u'1',
-            'form-MAX_NUM_FORMS': u'',
-            'id_form-0-num_votes': '1',
-            'id_form-0-answer_id': answer.pk}
-        response = self.client.post(self.url, data=form_data)
-        assert_code(response, 302)  # Successful vote posts redirect to poll results
+    def test_vote_saves_to_db(self):
+        self.submit_valid_vote()
+        self.assertEqual(models.Votes.objects.all().count(), 1)
+
 
 
 class TestPollResultsView(TestCase):

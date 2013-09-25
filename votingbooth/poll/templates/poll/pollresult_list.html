@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-
-Test content
+Results for poll: {{ poll.question }}
+<ul>
+{% for result in results %}
+    <li>{{ result.answer }}: {{ result.total_votes }}</li>
+{% endfor %}
+</ul>
 
 {% endblock content %}

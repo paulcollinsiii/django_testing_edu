@@ -19,6 +19,18 @@ class PollToResultsSignaling(TestCase):
                                            user=self.usr)
         eq_(models.PollResult.objects.get(poll=self.poll, answer=self.answer).total_votes, models.DEFAULT_GLOBAL_VOTES)
 
+    def test_new_poll_has_pollresult_per_answer(self):
+        eq_(self.poll.answer_set.all().count(), models.PollResult.objects.filter(poll=self.poll).count())
+
+    def test_new_poll_has_pollresult_per_answer(self):
+        for answer in self.poll.answer_set.all():
+            eq_(0, models.PollResult.objects.get(answer=answer, poll=self.poll).total_votes)
+
+    def test_new_answer_creates_new_pollresult_row(self):
+        orig_len = models.PollResult.objects.filter(poll=self.poll).count()
+        factories.AnswerFactory(poll=self.poll)
+        self.assertNotEqual(orig_len, models.PollResult.objects.filter(poll=self.poll).count())
+
     def test_change(self):
         v, _c = models.Votes.objects.get_or_create(num=1,
                                            answer=self.answer,
