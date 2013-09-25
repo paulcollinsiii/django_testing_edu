@@ -79,6 +79,11 @@ class PollResult(models.Model):
         unique_together =(('poll', 'answer'))
 
     @staticmethod
+    def handle_new_answer_signal(sender, instance, created, **kwargs):
+        if created:
+            PollResult.objects.create(answer=instance, poll=instance.poll)
+
+    @staticmethod
     def handle_vote_signal(sender, instance, **kwargs):
         if instance.pk:
             original = Votes.objects.get(pk=instance.pk)
@@ -145,3 +150,4 @@ class GroupVotes(models.Model):
 
 
 models.signals.pre_save.connect(PollResult.handle_vote_signal, sender=Votes)
+models.signals.post_save.connect(PollResult.handle_new_answer_signal, sender=Answer)
