@@ -1,1 +1,17 @@
+{% extends "base.html" %}
 
+{% block content %}
+<form action="." method="post">
+    {% csrf_token %}
+    <table>
+    {{ poll }}<br/>
+    {% for subform in form %}
+        {#  Yes doing it this way is a bit painful, but that's forms for ya #}
+        <tr>
+            <td><strong>{{ subform.initial.answer }}</strong> {{ subform.num_votes.label_tag }} {{ subform.num_votes }} {{ subform.answer_id }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+    <input type="submit" value="Submit" />
+</form>
+{% endblock content %}
